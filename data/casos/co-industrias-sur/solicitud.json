@@ -1,4 +1,0 @@
-{ "caso": "co-industrias-sur", "cliente": "Industrias del Sur S.A.", "pais": "CO", "formato": "xlsx",
-  "campos": ["Razón social", "NIT", "Dirección", "Correo de contacto", "Teléfono"],
-  "soportes_exigidos": ["rut", "camara_comercio"],
-  "contacto_cliente": { "nombre": "Equipo de Compras", "correo": "compras@industriasdelsur.example" } }

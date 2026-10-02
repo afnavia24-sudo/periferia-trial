@@ -1,9 +1,0 @@
-{
-  "_nota": "Soportes de Periferia. vigencia_hasta en formato YYYY-MM-DD; null = sin vencimiento. FICTICIO.",
-  "soportes": [
-    { "nombre": "rut", "descripcion": "Registro Único Tributario", "archivo": "soportes/rut.pdf", "vigencia_hasta": null },
-    { "nombre": "camara_comercio", "descripcion": "Certificado de existencia y representación legal", "archivo": "soportes/camara_comercio.pdf", "vigencia_hasta": "2026-12-15" },
-    { "nombre": "certificacion_bancaria", "descripcion": "Certificación bancaria", "archivo": "soportes/certificacion_bancaria.pdf", "vigencia_hasta": "2026-09-15" },
-    { "nombre": "certificado_experiencia", "descripcion": "Certificado de experiencia", "archivo": "soportes/certificado_experiencia.pdf", "vigencia_hasta": "2027-06-30" }
-  ]
-}

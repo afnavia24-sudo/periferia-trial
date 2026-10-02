@@ -1,0 +1,16 @@
+# Despliegue en Render (Blueprint). Las claves se cargan en el panel de Render, nunca aquí.
+services:
+  - type: web
+    name: reto-01-registro-proveedor
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ACCESS_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: claude-sonnet-5-5
+      - key: MAX_TOKENS_GLOBAL
+        value: "3000000"

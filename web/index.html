@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registro como proveedor · Periferia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="barra">
+    <div>
+      <h1>Registro como proveedor</h1>
+      <p class="sub">Prepara formularios y paquetes para firma. Nada se firma ni se envía sin tu confirmación.</p>
+    </div>
+    <div class="barra-acciones">
+      <span id="estado-modelo" class="estado-modelo">Conectando…</span>
+      <button id="nueva" class="boton-secundario" type="button">Nueva conversación</button>
+    </div>
+  </header>
+
+  <main id="conversacion" class="conversacion" aria-live="polite">
+    <section id="vacio" class="vacio">
+      <h2>¿Qué solicitud procesamos?</h2>
+      <p>Elige un caso o escribe tu instrucción.</p>
+      <div id="casos" class="casos"></div>
+      <button class="ejemplo" type="button" data-texto='Procesa el caso "ec-corp-andina". Dime qué campos quedaron llenos, cuáles faltan, si el paquete está listo para firma y qué soportes debo actualizar. No envíes nada todavía.'>
+        Usar el ejemplo del reto con ec-corp-andina
+      </button>
+    </section>
+  </main>
+
+  <div id="pensando" class="pensando" hidden><span class="punto"></span> Trabajando en la solicitud… <span id="segundos">0 s</span></div>
+
+  <form id="formulario" class="compositor">
+    <label for="entrada" class="oculto">Mensaje</label>
+    <textarea id="entrada" rows="2" placeholder="Ej.: procesa el caso co-industrias-delta" required maxlength="4000"></textarea>
+    <button id="enviar" type="submit">Enviar mensaje</button>
+  </form>
+
+  <dialog id="dialogo-clave">
+    <form method="dialog" id="form-clave">
+      <h2>Clave de acceso</h2>
+      <p>Este despliegue está protegido. Escribe la clave que aparece en el README.</p>
+      <input id="clave" type="password" autocomplete="off" required>
+      <button type="submit">Entrar</button>
+    </form>
+  </dialog>
+</body>
+</html>

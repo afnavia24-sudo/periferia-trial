@@ -1,4 +1,0 @@
-{ "caso": "ec-corp-andina", "cliente": "Corporación Andina Cía. Ltda.", "pais": "EC", "formato": "xlsx",
-  "campos": ["Nombre de la empresa", "RUC", "Ciudad", "Representante legal", "Código CIIU"],
-  "soportes_exigidos": ["rut", "camara_comercio"],
-  "contacto_cliente": { "nombre": "Departamento de Proveedores", "correo": "proveedores@corpandina.example" } }

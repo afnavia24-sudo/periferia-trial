@@ -1,55 +1,22 @@
-name: perixia-proveedor
+name: reto-01-registro-proveedor
 
 on:
   pull_request:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      juez:
-        description: "Activar LLM-as-judge"
-        type: boolean
-        default: true
-      repeticiones:
-        description: "Repeticiones por eval (estabilidad)"
-        default: "1"
 
 jobs:
-  unit:
+  verificacion:
+    # Sin ANTHROPIC_API_KEY: tests, typecheck y demo no llaman al modelo.
     runs-on: ubuntu-latest
     env:
-      FECHA_EVALUACION: "2026-10-01"
+      FECHA_EJECUCION: "2026-09-15"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run seed
       - run: npm test
-      - run: npm run evals -- --dry
-
-  evals:
-    # Llama a la API: solo manual o en main, para controlar costo.
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    needs: unit
-    runs-on: ubuntu-latest
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci
-      - name: Evals
-        run: >
-          npm run evals --
-          ${{ (github.event_name != 'workflow_dispatch' || inputs.juez) && '--juez' || '' }}
-          --repeticiones ${{ inputs.repeticiones || '1' }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with: { name: reportes-evals, path: reports/ }
-      - uses: mikepenz/action-junit-report@v4
-        if: always()
-        with: { report_paths: reports/junit-evals.xml, check_name: Evals del agente }
+      - run: npm run demo

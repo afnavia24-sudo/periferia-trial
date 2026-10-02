@@ -1,4 +1,0 @@
-{ "caso": "pe-logistica-lima", "cliente": "Logística Lima S.A.", "pais": "PE", "formato": "xlsx",
-  "campos": ["Razón social", "RUC", "Domicilio"],
-  "soportes_exigidos": ["rut", "certificacion_bancaria"],
-  "contacto_cliente": { "nombre": "Compras", "correo": "compras@logisticalima.example" } }

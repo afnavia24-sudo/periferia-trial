@@ -1,0 +1,94 @@
+:root {
+  --papel: #F4F6F8;
+  --hoja: #FFFFFF;
+  --tinta: #1C2430;
+  --tinta-suave: #5A6573;
+  --linea: #D9DEE4;
+  --sello: #1F4E79;
+  --pendiente: #A8641A;
+  --pendiente-fondo: #FFF5E6;
+  --ok: #2F6B4F;
+  --error: #A23B3B;
+  --bloqueo: #6B4FA0;
+  --radio: 6px;
+  font-family: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  color: var(--tinta);
+  background: var(--papel);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+.oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+button, textarea, input { font: inherit; }
+:focus-visible { outline: 2px solid var(--sello); outline-offset: 2px; }
+
+.barra { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; padding: 1.25rem clamp(1rem, 4vw, 2.5rem); border-bottom: 1px solid var(--linea); background: var(--hoja); }
+.barra h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; color: var(--sello); }
+.sub { margin: .25rem 0 0; color: var(--tinta-suave); font-size: .9rem; }
+.barra-acciones { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; justify-content: flex-end; }
+.estado-modelo { font-size: .8rem; color: var(--tinta-suave); }
+
+.conversacion { flex: 1; width: 100%; max-width: 820px; margin: 0 auto; padding: 1.5rem clamp(1rem, 4vw, 1.5rem) 9rem; }
+.vacio { padding: 2rem 0; }
+.vacio h2 { font-size: 1.6rem; margin: 0 0 .25rem; }
+.vacio p { color: var(--tinta-suave); margin: 0 0 1rem; }
+.casos { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+.casos button, .ejemplo { border: 1px solid var(--linea); background: var(--hoja); border-radius: 999px; padding: .4rem .9rem; cursor: pointer; color: var(--tinta); }
+.casos button:hover, .ejemplo:hover { border-color: var(--sello); color: var(--sello); }
+.ejemplo { border-radius: var(--radio); text-align: left; }
+
+.turno { margin: 0 0 1.5rem; }
+.turno.usuario { display: flex; justify-content: flex-end; }
+.turno.usuario .texto { background: var(--sello); color: #fff; padding: .6rem .9rem; border-radius: 14px 14px 2px 14px; max-width: 80%; white-space: pre-wrap; }
+.turno.agente .texto, .turno.sistema .texto { line-height: 1.55; max-width: 72ch; }
+.turno.sistema .texto { color: var(--error); }
+.texto h3 { font-size: 1.05rem; margin: .6rem 0 .4rem; }
+.texto p { margin: .4rem 0; }
+.texto ul { margin: .3rem 0; padding-left: 1.25rem; }
+.texto pre { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .8rem; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--radio); padding: .5rem; overflow-x: auto; }
+.texto table { border-collapse: collapse; font-size: .88rem; display: block; overflow-x: auto; }
+.texto th, .texto td { border: 1px solid var(--linea); padding: .3rem .5rem; text-align: left; }
+.texto code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .85em; background: #E9EDF1; padding: .05rem .3rem; border-radius: 4px; }
+
+.herramientas { margin: 0 0 .75rem; border-left: 2px solid var(--linea); padding-left: .75rem; display: grid; gap: .35rem; }
+.llamada summary { cursor: pointer; display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; font-size: .85rem; color: var(--tinta-suave); list-style: none; }
+.llamada summary::-webkit-details-marker { display: none; }
+.llamada summary::before { content: "▸"; color: var(--tinta-suave); }
+.llamada[open] summary::before { content: "▾"; }
+.nombre { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--tinta); font-weight: 500; }
+.marca { font-size: .72rem; font-weight: 600; padding: .05rem .4rem; border-radius: 4px; }
+.marca.ok { color: var(--ok); background: #E5F1EA; }
+.marca.error { color: var(--error); background: #F6E5E5; }
+.marca.pendiente { color: var(--pendiente); background: var(--pendiente-fondo); }
+.marca.bloqueada { color: var(--bloqueo); background: #EEE8F7; }
+.llamada pre { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .78rem; background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--radio); padding: .5rem; overflow-x: auto; margin: .35rem 0 0; }
+
+/* El elemento distintivo: la confirmación se ve como un sello pendiente sobre el documento. */
+.confirmacion { margin-top: .9rem; border: 2px dashed var(--pendiente); background: var(--pendiente-fondo); border-radius: var(--radio); padding: .9rem 1rem; max-width: 72ch; }
+.confirmacion strong { color: var(--pendiente); display: block; margin-bottom: .25rem; }
+.confirmacion p { margin: 0 0 .75rem; font-size: .92rem; }
+.confirmacion .acciones { display: flex; gap: .5rem; flex-wrap: wrap; }
+.boton-confirmar { background: var(--pendiente); color: #fff; border: 0; border-radius: var(--radio); padding: .5rem 1rem; cursor: pointer; font-weight: 600; }
+.boton-secundario { background: var(--hoja); color: var(--tinta); border: 1px solid var(--linea); border-radius: var(--radio); padding: .45rem .9rem; cursor: pointer; }
+.confirmacion.resuelta { opacity: .6; }
+.confirmacion.resuelta .acciones { display: none; }
+
+.pensando[hidden] { display: none; }
+.pensando { position: fixed; bottom: 6.5rem; left: 50%; transform: translateX(-50%); background: var(--hoja); border: 1px solid var(--linea); border-radius: 999px; padding: .4rem .9rem; font-size: .85rem; color: var(--tinta-suave); display: flex; gap: .5rem; align-items: center; }
+.punto { width: .55rem; height: .55rem; border-radius: 50%; background: var(--sello); animation: latido 1s ease-in-out infinite; }
+@keyframes latido { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .punto { animation: none; } }
+
+.compositor { position: fixed; bottom: 0; left: 0; right: 0; background: var(--hoja); border-top: 1px solid var(--linea); padding: .75rem clamp(1rem, 4vw, 2.5rem); display: flex; gap: .6rem; justify-content: center; }
+.compositor textarea { flex: 1; max-width: 720px; resize: none; border: 1px solid var(--linea); border-radius: var(--radio); padding: .6rem .75rem; background: var(--papel); }
+.compositor button { background: var(--sello); color: #fff; border: 0; border-radius: var(--radio); padding: 0 1.1rem; cursor: pointer; font-weight: 600; }
+.compositor button:disabled { opacity: .5; cursor: progress; }
+
+dialog { border: 1px solid var(--linea); border-radius: var(--radio); padding: 1.25rem; max-width: 360px; }
+dialog input { width: 100%; padding: .5rem; margin: .5rem 0 1rem; border: 1px solid var(--linea); border-radius: var(--radio); }
+dialog button { background: var(--sello); color: #fff; border: 0; border-radius: var(--radio); padding: .5rem 1rem; }
+
+@media (max-width: 600px) {
+  .barra { flex-direction: column; align-items: flex-start; }
+  .barra-acciones { justify-content: flex-start; }
+  .turno.usuario .texto { max-width: 92%; }
+}
