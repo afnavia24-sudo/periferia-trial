@@ -6,9 +6,9 @@
   "private": true,
   "scripts": {
     "seed": "tsx scripts/seed-soportes.ts",
-    "agente": "tsx src/cli.ts",
-    "mcp": "tsx src/mcp-server.ts",
-    "evals": "tsx evals/runner.ts",
+    "agente": "tsx --env-file-if-exists=.env src/cli.ts",
+    "mcp": "tsx --env-file-if-exists=.env src/mcp-server.ts",
+    "evals": "tsx --env-file-if-exists=.env evals/runner.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
