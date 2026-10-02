@@ -1,0 +1,4 @@
+{ "caso": "pa-naviera-colon", "cliente": "Naviera Colón S.A.", "pais": "PA", "formato": "portal",
+  "campos": ["Razón social", "RUC", "Sitio web", "Correo electrónico"],
+  "soportes_exigidos": ["rut"],
+  "contacto_cliente": { "nombre": "Portal de proveedores", "correo": null } }

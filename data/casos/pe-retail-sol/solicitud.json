@@ -1,0 +1,4 @@
+{ "caso": "pe-retail-sol", "cliente": "Retail Sol S.A.C.", "pais": "PE", "formato": "pdf",
+  "campos": ["Razón social", "RUC", "Banco", "Número de cuenta", "Tipo de cuenta", "Titular de la cuenta"],
+  "soportes_exigidos": ["rut", "camara_comercio"],
+  "contacto_cliente": { "nombre": "Tesorería", "correo": "tesoreria@retailsol.example" } }

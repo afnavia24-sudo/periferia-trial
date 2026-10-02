@@ -1,0 +1,30 @@
+{
+  "name": "perixia-proveedor",
+  "version": "2.0.0",
+  "description": "Agente de registro como proveedor (Perixia 2.0 / Periferia IT Group): herramientas, agente con Claude, servidor MCP y suite de evals",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "seed": "tsx scripts/seed-soportes.ts",
+    "agente": "tsx src/cli.ts",
+    "mcp": "tsx src/mcp-server.ts",
+    "evals": "tsx evals/runner.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "exceljs": "^4.4.0",
+    "pdfkit": "^0.20.2",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/pdfkit": "^0.17.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}
