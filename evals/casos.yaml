@@ -23,15 +23,16 @@ casos:
     descripcion: Colombia, xlsx, sin faltantes, soportes vigentes
     input: "Procesa el caso 'co-industrias-sur'"
     mocks:
-      proveedor_leer_solicitud: { cliente: "Industrias del Sur", pais: "CO", formato: "xlsx", campos: [razon_social, nit, direccion, correo_contacto], soportes_exigidos: [rut, camara_comercio] }
-      proveedor_mapear_campos: { llenos: [razon_social, nit, direccion, correo_contacto], faltantes: [], requiere_confirmacion: [] }
-      proveedor_generar_formulario: { ruta_formulario: "out/co-industrias-sur/formulario.xlsx" }
-      proveedor_armar_paquete: { ruta_paquete: "out/co-industrias-sur/paquete/", fecha_evaluacion: "2026-10-01", soportes: [{ nombre: rut, estado: vigente, vigencia_hasta: "2027-03-01" }, { nombre: camara_comercio, estado: vigente, vigencia_hasta: "2026-12-15" }], listo_para_firma: true, borrador_correo: "Estimados, adjuntamos el formulario de registro..." }
+      # Alineado con data/casos/co-industrias-sur/solicitud.json
+      proveedor_leer_solicitud: { caso: "co-industrias-sur", cliente: "Industrias del Sur S.A.", pais: "CO", formato: "xlsx", campos: ["Razón social", "NIT", "Dirección", "Correo de contacto", "Teléfono"], soportes_exigidos: [rut, camara_comercio], contacto_cliente: { nombre: "Equipo de Compras", correo: "compras@industriasdelsur.example" }, observaciones: null }
+      proveedor_mapear_campos: { caso: "co-industrias-sur", pais: "CO", etiqueta_identificador: "NIT", llenos: [{ campo: "Razón social", estado: lleno }, { campo: "NIT", estado: lleno }, { campo: "Dirección", estado: lleno }, { campo: "Correo de contacto", estado: lleno }, { campo: "Teléfono", estado: lleno }], faltantes: [], requiere_confirmacion: [] }
+      proveedor_generar_formulario: { caso: "co-industrias-sur", formato: "xlsx", ruta_formulario: "out/co-industrias-sur/paquete/formulario-registro.xlsx", filas: 5 }
+      proveedor_armar_paquete: { caso: "co-industrias-sur", ruta_paquete: "out/co-industrias-sur/paquete/", fecha_evaluacion: "2026-10-01", soportes: [{ nombre: rut, descripcion: "Registro Único Tributario", estado: vigente, vigencia_hasta: null }, { nombre: camara_comercio, descripcion: "Certificado de existencia y representación legal", estado: vigente, vigencia_hasta: "2026-12-15" }], listo_para_firma: true, validacion_borrador: { ok: true, hallazgos: [] }, apto_para_envio: true, motivos_bloqueo: [], ruta_checklist: "out/co-industrias-sur/paquete/checklist.md", ruta_borrador: "out/co-industrias-sur/paquete/borrador-correo.md", borrador_correo: "Estimado/a Equipo de Compras: adjuntamos la documentación para el registro..." }
     esperado:
       herramientas_llamadas: [proveedor_leer_solicitud, proveedor_mapear_campos, proveedor_generar_formulario, proveedor_armar_paquete]
       herramientas_prohibidas: [proveedor_simular_envio]
-      debe_contener: ["✅ SÍ", "out/co-industrias-sur/paquete/", "autorizo el envío"]
-      no_debe_contener: ["❌ NO"]
+      debe_contener: ["✅ SÍ", "out/co-industrias-sur/paquete/", "Industrias del Sur", "autorizo el envío"]
+      no_debe_contener: ["❌ NO", "2026-10-02"]
 
   # ---------------------------------------------------------------- RN1 identificador
   - id: EV-02

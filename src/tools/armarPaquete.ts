@@ -13,6 +13,7 @@ import type { MapeoPersistido } from "./mapearCampos";
 
 export interface SoporteEvaluado {
   nombre: string;
+  descripcion: string;
   estado: EstadoSoporte;
   vigencia_hasta: string | null;
   archivo: string | null;
@@ -28,13 +29,17 @@ export interface EstadoPaquete {
   apto_para_envio: boolean;
   motivos_bloqueo: string[];
   destinatario: string | null;
+  /** Se completa al simular el envío; un paquete re-armado vuelve a quedar sin envío. */
+  envio?: { id_simulacion: string; simulado_en: string };
 }
 
 function evaluarSoportes(solicitud: Solicitud, fecha: string, destino: string): SoporteEvaluado[] {
   const catalogo = cargarSoportes();
+  // Limpia copias de ejecuciones anteriores: el paquete solo debe tener los soportes exigidos hoy.
+  fs.rmSync(destino, { recursive: true, force: true });
   return solicitud.soportes_exigidos.map((nombre) => {
     const s = catalogo.find((c) => c.nombre === nombre);
-    if (!s) return { nombre, estado: "ausente", vigencia_hasta: null, archivo: null, motivo: "no existe en el repositorio de soportes" };
+    if (!s) return { nombre, descripcion: nombre, estado: "ausente", vigencia_hasta: null, archivo: null, motivo: "no existe en el repositorio de soportes" };
     const origen = rutaArchivoSoporte(s);
     const existe = fs.existsSync(origen);
     const estado = evaluarVigencia({ existe, vigenciaHasta: s.vigencia_hasta, fechaEvaluacion: fecha });
@@ -46,7 +51,7 @@ function evaluarSoportes(solicitud: Solicitud, fecha: string, destino: string): 
       archivo = rel(copia);
     }
     const motivo = !existe ? "archivo no encontrado" : estado === "vencido" ? `vencido el ${s.vigencia_hasta}` : null;
-    return { nombre, estado, vigencia_hasta: s.vigencia_hasta, archivo, motivo };
+    return { nombre, descripcion: s.descripcion ?? nombre, estado, vigencia_hasta: s.vigencia_hasta, archivo, motivo };
   });
 }
 
@@ -56,7 +61,7 @@ function redactarBorrador(solicitud: Solicitud, mapeo: MapeoPersistido, soportes
   const faltantes = mapeo.filas.filter((f) => f.estado === "faltante").map((f) => f.campo);
   const adjuntos = [
     solicitud.formato === "portal" ? null : `Formulario de registro diligenciado (${solicitud.formato.toUpperCase()})`,
-    ...soportes.filter((s) => s.estado === "vigente").map((s) => `Soporte: ${s.nombre}`),
+    ...soportes.filter((s) => s.estado === "vigente").map((s) => s.descripcion),
   ].filter(Boolean);
 
   // RN2: este texto se construye solo con datos NO bancarios. La validación posterior es una segunda barrera.
@@ -91,7 +96,7 @@ function redactarChecklist(solicitud: Solicitud, mapeo: MapeoPersistido, soporte
     (f) => `| ${f.campo} | ${f.estado} | ${f.observacion ?? ""} |`,
   );
   const lineasSoportes = soportes.map(
-    (s) => `| ${s.nombre} | ${s.estado} | ${s.vigencia_hasta ?? "sin vencimiento"} | ${s.motivo ?? ""} |`,
+    (s) => `| ${s.descripcion} (${s.nombre}) | ${s.estado} | ${s.vigencia_hasta ?? "sin vencimiento"} | ${s.motivo ?? ""} |`,
   );
   return [
     `# Checklist - ${solicitud.caso}`,
@@ -165,6 +170,7 @@ export async function proveedorArmarPaquete(input: { caso: string }) {
   fs.writeFileSync(rutaBorrador, borrador, "utf8");
   fs.writeFileSync(rutaChecklist, redactarChecklist(solicitud, mapeo, soportes, estado), "utf8");
   guardarJson(path.join(dirCaso(input.caso), "estado.json"), estado);
+  fs.rmSync(path.join(dirCaso(input.caso), "envio-simulado.json"), { force: true });
 
   return {
     caso: solicitud.caso,

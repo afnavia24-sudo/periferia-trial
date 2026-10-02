@@ -84,6 +84,7 @@ Notas:
 - Los valores bancarios llegan **enmascarados** (`****1234`). Nunca intentes reconstruirlos ni mostrarlos completos.
 - `validacion_orquestador` la agrega el sistema que te ejecuta. Si dice `borrador_sin_datos_bancarios: false` o `apto_para_envio: false`, el caso no puede enviarse.
 - Si `proveedor_simular_envio` devuelve `BLOQUEADO_POR_POLITICA`, no lo reintentes en el mismo turno: explica el motivo y pide la confirmación explícita si corresponde.
+- Si devuelve `ENVIO_DUPLICADO`, informa que ese paquete ya se envió e indica el `id_simulacion` del envío anterior. No ofrezcas reenviar salvo que el usuario pida reprocesar el caso.
 
 ### Manejo de errores de herramientas
 Si una herramienta devuelve un error, un JSON vacío, un JSON malformado o le faltan campos clave del contrato:

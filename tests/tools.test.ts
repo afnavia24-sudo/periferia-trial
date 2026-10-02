@@ -123,3 +123,50 @@ describe("paquete y envío simulado", () => {
     await expect(run("proveedor_armar_paquete", { caso: "co-industrias-sur" })).rejects.toMatchObject({ codigo: "FORMULARIO_NO_GENERADO" });
   });
 });
+
+describe("regresiones del caso 1 (co-industrias-sur)", () => {
+  const caso = "co-industrias-sur";
+
+  it("no permite enviar dos veces el mismo paquete", async () => {
+    await flujo(caso);
+    const primero = await run("proveedor_simular_envio", { caso });
+    await expect(run("proveedor_simular_envio", { caso })).rejects.toMatchObject({
+      codigo: "ENVIO_DUPLICADO",
+      detalle: expect.objectContaining({ id_simulacion: primero.id_simulacion }),
+    });
+  });
+
+  it("re-armar el paquete habilita un nuevo envío y borra el registro anterior", async () => {
+    await flujo(caso);
+    await run("proveedor_simular_envio", { caso });
+    await run("proveedor_armar_paquete", { caso });
+    expect(fs.existsSync(path.join(OUT_DIR, caso, "envio-simulado.json"))).toBe(false);
+    await expect(run("proveedor_simular_envio", { caso })).resolves.toMatchObject({ estado_envio: "simulado_ok" });
+  });
+
+  it("el correo usa la descripción de los soportes, no el identificador técnico", async () => {
+    const { p } = await flujo(caso);
+    expect(p.borrador_correo).toContain("- Registro Único Tributario");
+    expect(p.borrador_correo).toContain("- Certificado de existencia y representación legal");
+    expect(p.borrador_correo).not.toMatch(/Soporte: \w+_\w+|Soporte: rut/);
+  });
+
+  it("el formulario toma el proveedor del maestro y la fecha en hora de Bogotá", async () => {
+    const { g } = await flujo(caso);
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.readFile(path.resolve(g.ruta_formulario));
+    const ws = wb.getWorksheet("Registro proveedor")!;
+    const fila = (etiqueta: string) => ws.getColumn(1).values.findIndex((v) => v === etiqueta);
+    expect(ws.getRow(fila("Proveedor")).getCell(2).value).toBe("Periferia IT Group S.A.S.");
+    expect(String(ws.getRow(fila("Generado")).getCell(2).value)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} \(America\/Bogota\)$/);
+  });
+
+  it("el paquete no conserva soportes de ejecuciones anteriores", async () => {
+    await flujo(caso);
+    const sobrante = path.join(OUT_DIR, caso, "paquete", "soportes", "certificacion_bancaria.pdf");
+    fs.writeFileSync(sobrante, "viejo");
+    await run("proveedor_armar_paquete", { caso });
+    expect(fs.existsSync(sobrante)).toBe(false);
+    expect(fs.readdirSync(path.dirname(sobrante)).sort()).toEqual(["camara_comercio.pdf", "rut.pdf"]);
+  });
+});

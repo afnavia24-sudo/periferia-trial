@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
+import { fechaHoraLocal } from "../config";
 import { ToolError } from "../lib/errores";
-import { cargarSolicitud, dirCaso, dirPaquete, leerJsonSiExiste, rel } from "../lib/repositorio";
+import { cargarMaestro, cargarSolicitud, dirCaso, dirPaquete, leerJsonSiExiste, rel } from "../lib/repositorio";
 import type { FilaMapeo, MapeoPersistido } from "./mapearCampos";
 
 const ETIQUETA_ESTADO: Record<FilaMapeo["estado"], string> = {
@@ -18,6 +19,18 @@ export function cargarMapeo(caso: string): MapeoPersistido {
   return mapeo;
 }
 
+/** Encabezado común: el nombre del proveedor sale del maestro, no del código. */
+function datosEncabezado(mapeo: MapeoPersistido): [string, string][] {
+  const razonSocial = cargarMaestro().razon_social;
+  if (!razonSocial) throw new ToolError("MAESTRO_INCOMPLETO", "El repositorio maestro no tiene razon_social");
+  return [
+    ["Proveedor", razonSocial],
+    ["Cliente", mapeo.cliente],
+    ["País del cliente", mapeo.pais],
+    ["Generado", fechaHoraLocal(mapeo.generado_en)],
+  ];
+}
+
 async function generarXlsx(mapeo: MapeoPersistido, ruta: string) {
   const wb = new ExcelJS.Workbook();
   wb.creator = "Perixia 2.0";
@@ -26,10 +39,7 @@ async function generarXlsx(mapeo: MapeoPersistido, ruta: string) {
   ws.columns = [{ width: 32 }, { width: 42 }, { width: 22 }, { width: 58 }];
 
   ws.addRow(["Formulario de registro como proveedor"]).font = { ...fuente, size: 14, bold: true };
-  ws.addRow(["Proveedor", "Periferia IT Group"]).font = fuente;
-  ws.addRow(["Cliente", mapeo.cliente]).font = fuente;
-  ws.addRow(["País del cliente", mapeo.pais]).font = fuente;
-  ws.addRow(["Generado", mapeo.generado_en]).font = fuente;
+  for (const fila of datosEncabezado(mapeo)) ws.addRow(fila).font = fuente;
   ws.addRow([]);
   const leyenda = ws.addRow(["Leyenda: filas en amarillo = campo faltante (completar antes de firmar); naranja = requiere confirmación."]);
   leyenda.font = { ...fuente, italic: true };
@@ -59,10 +69,7 @@ function generarPdf(mapeo: MapeoPersistido, ruta: string): Promise<void> {
 
     doc.font("Helvetica-Bold").fontSize(15).text("Formulario de registro como proveedor");
     doc.moveDown(0.5).font("Helvetica").fontSize(10);
-    doc.text(`Proveedor: Periferia IT Group`);
-    doc.text(`Cliente: ${mapeo.cliente}`);
-    doc.text(`País del cliente: ${mapeo.pais}`);
-    doc.text(`Generado: ${mapeo.generado_en}`);
+    for (const [k, v] of datosEncabezado(mapeo)) doc.text(`${k}: ${v}`);
     doc.moveDown();
 
     const x = [50, 210, 370, 450];

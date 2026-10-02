@@ -16,3 +16,11 @@ export function fechaEvaluacion(): string {
   }
   return new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA }).format(new Date());
 }
+
+/** Fecha y hora legibles en la zona de Bogotá, p. ej. "2026-10-01 22:20 (America/Bogota)". */
+export function fechaHoraLocal(iso: string | Date = new Date()): string {
+  const d = new Date(iso);
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  const h = new Intl.DateTimeFormat("en-GB", { timeZone: ZONA_HORARIA, hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  return `${f} ${h} (${ZONA_HORARIA})`;
+}

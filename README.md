@@ -21,7 +21,7 @@ Usuario ──► src/cli.ts ──► AgenteProveedor (src/agent/agente.ts) ─
 | `src/agent/agente.ts` | Bucle de tool use + guardias que no dependen de que el modelo obedezca el prompt |
 | `src/mcp-server.ts` | Las mismas herramientas expuestas por MCP (stdio) |
 | `evals/` | Suite YAML (28 casos, 35 tras expandir parámetros) + runner con mocks, LLM-as-judge y JUnit |
-| `tests/` | 62 tests unitarios (reglas, herramientas y orquestador con LLM simulado) |
+| `tests/` | 67 tests unitarios (reglas, herramientas y orquestador con LLM simulado) |
 
 ## Defensa en profundidad
 
