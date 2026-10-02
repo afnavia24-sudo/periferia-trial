@@ -13,7 +13,8 @@
     "demo": "tsx demo.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:modulo": "tsx scripts/build-modulo.ts"
+    "build:modulo": "tsx scripts/build-modulo.ts",
+    "build:vercel": "tsx scripts/build-vercel.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/pdfkit": "^0.17.6",
+    "esbuild": "^0.28.2",
     "typescript": "^5.9.0",
     "vitest": "^5.0.3"
   }

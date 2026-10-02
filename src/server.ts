@@ -4,7 +4,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { z } from "zod"
 import { Agente, cargarSistema } from "./agent/ciclo"
-import { Sesiones } from "./agent/sesiones"
+import { AlmacenMemoria, crearAlmacen, type AlmacenSesiones } from "./agent/sesiones"
 import { leerConfig } from "./config"
 import type { AdaptadorLLM } from "./llm/adapter"
 import { crearAdaptador } from "./llm"
@@ -46,7 +46,10 @@ function leerCuerpo(req: http.IncomingMessage): Promise<unknown> {
   })
 }
 
-export function crearServidor(adaptador: AdaptadorLLM, opciones = leerConfig()) {
+export type Manejador = (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void>
+
+/** Atiende una petición. Lo usan el servidor HTTP local y la función de Vercel (src/vercel.ts). */
+export function crearManejador(adaptador: AdaptadorLLM, opciones = leerConfig(), sesiones: AlmacenSesiones = new AlmacenMemoria()): Manejador {
   const agente = new Agente({
     adaptador,
     sistema: cargarSistema(RAIZ),
@@ -55,38 +58,39 @@ export function crearServidor(adaptador: AdaptadorLLM, opciones = leerConfig()) 
     maxTokensSesion: opciones.MAX_TOKENS_SESION,
     presupuestoGlobal: { usados: 0, maximo: opciones.MAX_TOKENS_GLOBAL },
   })
-  const sesiones = new Sesiones()
   const autorizado = (req: http.IncomingMessage) => !opciones.ACCESS_KEY || req.headers["x-access-key"] === opciones.ACCESS_KEY
 
-  return http.createServer(async (req, res) => {
+  return async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost")
     try {
       if (req.method === "GET" && ESTATICOS[url.pathname]) {
         const archivo = path.join(RAIZ, "web", ESTATICOS[url.pathname] ?? "index.html")
         res.writeHead(200, { "content-type": TIPOS[path.extname(archivo)] ?? "text/plain" })
-        return res.end(fs.readFileSync(archivo))
+        res.end(fs.readFileSync(archivo))
+        return
       }
       if (req.method === "GET" && url.pathname === "/api/health") {
-        return json(res, 200, { ok: true, provider: adaptador.proveedor, model: adaptador.modelo, requiresAccessKey: Boolean(opciones.ACCESS_KEY), casos: listarCasos() })
+        return json(res, 200, { ok: true, provider: adaptador.proveedor, model: adaptador.modelo, requiresAccessKey: Boolean(opciones.ACCESS_KEY), sessionStore: sesiones.tipo, casos: listarCasos() })
       }
       if (url.pathname.startsWith("/api/") && !autorizado(req)) return json(res, 401, { error: "clave de acceso inválida" })
 
       if (req.method === "POST" && url.pathname === "/api/chat") {
         const cuerpo = cuerpoChat.safeParse(await leerCuerpo(req))
         if (!cuerpo.success) return json(res, 400, { error: "se espera { sessionId?, message } con un mensaje de 1 a 4000 caracteres" })
-        const sesion = sesiones.obtenerOCrear(cuerpo.data.sessionId)
-        if (sesion.ocupada) return json(res, 409, { error: "la sesión está procesando otro mensaje" })
-        sesion.ocupada = true
+        const sesion = await sesiones.obtenerOCrear(cuerpo.data.sessionId)
+        if (!(await sesiones.tomar(sesion.id))) return json(res, 409, { error: "la sesión está procesando otro mensaje" })
         try {
-          return json(res, 200, await agente.turno(sesion, cuerpo.data.message))
+          const respuesta = await agente.turno(sesion, cuerpo.data.message)
+          await sesiones.guardar(sesion)
+          return json(res, 200, respuesta)
         } finally {
-          sesion.ocupada = false
+          await sesiones.soltar(sesion.id)
         }
       }
 
       const m = url.pathname.match(/^\/api\/sessions\/([\w-]{8,64})$/)
       if (req.method === "GET" && m?.[1]) {
-        const s = sesiones.obtener(m[1])
+        const s = await sesiones.obtener(m[1])
         if (!s) return json(res, 404, { error: "sesión no encontrada" })
         return json(res, 200, { id: s.id, creada: s.creada, tokensUsados: s.tokensUsados, needsConfirmation: s.confirmacionPendiente !== null, historial: s.historial })
       }
@@ -96,14 +100,18 @@ export function crearServidor(adaptador: AdaptadorLLM, opciones = leerConfig()) 
       console.error("[server]", e instanceof Error ? e.message : e)
       if (!res.headersSent) json(res, 500, { error: "error interno del servidor" })
     }
-  })
+  }
+}
+
+export function crearServidor(adaptador: AdaptadorLLM, opciones = leerConfig(), sesiones?: AlmacenSesiones) {
+  return http.createServer(crearManejador(adaptador, opciones, sesiones))
 }
 
 const esPrincipal = process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (esPrincipal) {
   const config = leerConfig()
   const adaptador = crearAdaptador(config)
-  crearServidor(adaptador, config).listen(config.PORT, () => {
+  crearServidor(adaptador, config, crearAlmacen()).listen(config.PORT, () => {
     console.log(`Agente listo en http://localhost:${config.PORT} · ${adaptador.proveedor}/${adaptador.modelo}`)
   })
 }

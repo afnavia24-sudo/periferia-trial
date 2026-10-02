@@ -2,7 +2,7 @@
 
 Agente conversacional que lee una solicitud de registro como proveedor, llena el formulario del cliente desde el repositorio maestro de Periferia, arma el paquete para la firma del representante legal y **nunca envía nada sin confirmación explícita**.
 
-- **Link de prueba:** `<pega aquí la URL de Render>`
+- **Link de prueba:** `<pega aquí la URL de Vercel o Render>`
 - **Clave de acceso del link:** `<pega aquí el valor de ACCESS_KEY>` (el front la pide al entrar)
 
 ## Arranque en local (un comando)
@@ -25,7 +25,7 @@ npm run demo                # o: bun run demo.ts
 Ejecuta los 4 casos de `fixtures/reto-01/casos/` llamando directamente a las herramientas, sin clave de ningún proveedor. Limpia `out/` al inicio y produce el mismo resultado en ejecuciones consecutivas (salvo timestamps).
 
 ```bash
-npm test                    # 67 tests: herramientas, ciclo del agente, API, demo y módulo
+npm test                    # 73 tests: herramientas, ciclo del agente, sesiones, API, demo y módulo
 npm run typecheck
 ```
 
@@ -44,6 +44,8 @@ npm run typecheck
 | `ACCESS_KEY` | No | — | Si se define, la API exige el header `x-access-key` |
 | `FECHA_EJECUCION` | No | hoy en America/Bogota | Fija la fecha con la que se evalúan las vigencias (`YYYY-MM-DD`) |
 | `PORT` | No | `3000` | Puerto HTTP |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | En Vercel, sí | — | Upstash Redis para las sesiones (los crea la integración de Vercel). También se aceptan `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`. Sin ellos, las sesiones viven en memoria |
+| `OUT_DIR` | No | `out/` del proyecto | Carpeta de salidas. En Vercel se fija sola a `/tmp/out` |
 
 Las variables vacías cuentan como no definidas, así que `.env.example` copiado tal cual funciona.
 
@@ -67,7 +69,7 @@ Luego escribe `envía`: el agente pide confirmación y el chat la resalta. Con `
 |---|---|---|
 | `POST` | `/api/chat` | `{ sessionId?, message }` → `{ sessionId, reply, toolCalls[], needsConfirmation, error }` |
 | `GET` | `/api/sessions/:id` | `{ id, creada, tokensUsados, needsConfirmation, historial[] }` |
-| `GET` | `/api/health` | `{ ok, provider, model, requiresAccessKey, casos[] }` (sin claves) |
+| `GET` | `/api/health` | `{ ok, provider, model, requiresAccessKey, sessionStore, casos[] }` (sin claves). `sessionStore` es `memoria` o `redis` |
 
 `toolCalls[]` trae, por cada llamada, `{ nombre, args, ok, resumen, bloqueada }`. Si no se envía `sessionId`, se crea una sesión nueva. Errores: `400` (cuerpo inválido), `401` (clave de acceso), `409` (la sesión está procesando otro mensaje).
 
@@ -81,7 +83,9 @@ src/tools/registro.ts            validación zod, ejecución y logs (RN5, CA4)
 src/tools/lib/                   carga de fixtures, mapeo, formularios, paquete
 src/agent/                       ciclo del agente, guardia de confirmación, sesiones
 src/llm/                         interfaz del proveedor + implementación Anthropic
-src/server.ts                    API HTTP y estáticos
+src/server.ts                    API HTTP y estáticos (servidor local, Render)
+src/vercel.ts                    la misma API como función de Vercel
+scripts/build-vercel.ts          genera .vercel/output para Vercel
 web/                             front de chat (HTML, CSS y JS sin build)
 modulo/                          bonus §9.4 (generado con npm run build:modulo)
 fixtures/                        entregados por Periferia (solo lectura)
@@ -100,6 +104,27 @@ out/<caso>/
 ├── mapeo.json · estado.json
 out/log.jsonl           todas las llamadas, con sessionId
 ```
+
+## Despliegue en Vercel
+
+`vercel.json` ejecuta `npm run build:vercel`, que genera `.vercel/output`: el front como estático y `/api/*` como una función Node 22 con el backend empaquetado, sus dependencias y los archivos que lee (prompt, conocimiento y fixtures).
+
+1. En Vercel: **Add New → Project** e importa el repo. No cambies el preset ni los comandos: los toma de `vercel.json`.
+2. En **Settings → Environment Variables**, carga `ANTHROPIC_API_KEY` y `ACCESS_KEY`.
+3. En **Storage** (o el Marketplace), crea una base **Upstash Redis** y conéctala al proyecto. Esto agrega `KV_REST_API_URL` y `KV_REST_API_TOKEN`.
+4. Vuelve a desplegar (**Deployments → Redeploy**) para que tome las variables.
+5. Verifica `https://<tu-proyecto>.vercel.app/api/health`: debe responder `"sessionStore": "redis"`.
+
+Diferencias frente a un servidor:
+
+- **Sesiones:** cada mensaje puede llegar a otra instancia de la función, así que sin Redis la conversación y la confirmación de envío pueden perderse. En ese caso el envío queda **bloqueado** (nunca se envía sin confirmar), pero el usuario tendría que repetir la confirmación. Por eso Redis es obligatorio en Vercel.
+- **Salidas:** se escriben en `/tmp/out` de la instancia y se pierden cuando esta se recicla. El agente las reporta igual, como `out/...`.
+- **Tiempo:** cada petición tiene un máximo de 300 s (`maxDuration`). Un turno con muchas llamadas al modelo puede acercarse a ese límite; si pasa, baja `MAX_ITERACIONES`.
+- **`MAX_TOKENS_GLOBAL`:** se cuenta por instancia, no para todo el despliegue.
+
+Si la API responde `configuración incompleta: …`, falta una variable en el panel de Vercel. El detalle de cualquier error está en **Deployments → (el despliegue) → Logs**.
+
+Para probar el build en local: `npm run build:vercel` (o `npx vercel build` + `npx vercel dev` si tienes la CLI de Vercel).
 
 ## Despliegue (Render)
 

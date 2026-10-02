@@ -17,7 +17,7 @@ afterAll(() => new Promise<void>((r) => servidor.close(() => r())))
 describe("API", () => {
   it("GET /api/health no expone claves y lista los casos", async () => {
     const r = await fetch(`${base}/api/health`).then((x) => x.json())
-    expect(r).toMatchObject({ ok: true, provider: "falso", model: "guion", requiresAccessKey: true })
+    expect(r).toMatchObject({ ok: true, provider: "falso", model: "guion", requiresAccessKey: true, sessionStore: "memoria" })
     expect(r.casos).toEqual(["co-industrias-delta", "ec-corp-andina", "hn-agroexport-sula", "pa-logistica-istmo"])
     expect(JSON.stringify(r)).not.toContain("clave-demo")
   })

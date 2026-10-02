@@ -11,7 +11,8 @@ export function validarCaso(caso: string): string {
 
 export function rutas(ctx: Ctx) {
   const fixtures = path.join(ctx.directory, "fixtures", "reto-01")
-  const out = path.join(ctx.directory, "out")
+  // OUT_DIR permite escribir fuera del proyecto (en Vercel solo /tmp admite escritura).
+  const out = process.env.OUT_DIR ? path.resolve(process.env.OUT_DIR) : path.join(ctx.directory, "out")
   return {
     fixtures,
     casos: path.join(fixtures, "casos"),
@@ -33,7 +34,9 @@ export function dirSalida(ctx: Ctx, caso: string): string {
   return dir
 }
 
-/** Ruta relativa a la raíz del proyecto, para reportar sin exponer rutas absolutas. */
+/** Ruta relativa a la raíz del proyecto, para reportar sin exponer rutas absolutas. Las salidas siempre se reportan como out/... */
 export function relativa(ctx: Ctx, ruta: string): string {
-  return path.relative(ctx.directory, ruta).split(path.sep).join("/")
+  const { out } = rutas(ctx)
+  const dentroDeOut = ruta === out || ruta.startsWith(out + path.sep)
+  return (dentroDeOut ? path.join("out", path.relative(out, ruta)) : path.relative(ctx.directory, ruta)).split(path.sep).join("/")
 }
