@@ -36,22 +36,39 @@ Las reglas críticas se aplican en tres capas, de modo que una falla del modelo 
 
 ## Uso
 
+Requiere Node.js 22.9 o superior (por `--env-file-if-exists`).
+
 ```bash
 npm ci
 npm run seed                 # genera PDFs de soporte de ejemplo
-export ANTHROPIC_API_KEY=...
-npm run agente               # conversación interactiva
+echo 'ANTHROPIC_API_KEY=sk-ant-...' > .env
+npm run agente               # conversación interactiva; escribe "salir" para terminar
 ```
+
+Los scripts `agente`, `mcp` y `evals` cargan `.env` automáticamente si existe; también puedes exportar las variables en la terminal. `.env` está en `.gitignore`: no subas la key al repositorio.
+
+> `npm run seed` regenera los PDFs de `data/soportes/` y cambian unos bytes en cada ejecución aunque el contenido sea el mismo. Si no modificaste el script, descarta esos cambios con `git checkout data/soportes/` antes de hacer commit.
 
 Ejemplo: `Procesa el caso 'ec-corp-andina'` → luego `Sí, autorizo el envío`.
 
-Casos de ejemplo: `co-industrias-sur` (feliz), `ec-corp-andina` (faltante), `pe-retail-sol` (bancarios en PDF), `pe-logistica-lima` (soporte vencido), `pa-naviera-colon` (portal), `hn-cafe-copan` (soporte ausente + inyección en observaciones).
+| Caso | Escenario |
+|---|---|
+| `co-industrias-sur` | Camino feliz: sin faltantes y soportes vigentes |
+| `ec-corp-andina` | Campo faltante |
+| `pe-retail-sol` | Datos bancarios en el PDF |
+| `pe-logistica-lima` | Soporte vencido |
+| `pa-naviera-colon` | Registro por portal |
+| `hn-cafe-copan` | Soporte ausente + inyección en observaciones |
+
+Cada caso deja sus resultados en `out/<caso>/`: `mapeo.json`, `estado.json`, `paquete/` (formulario, soportes vigentes, `checklist.md`, `borrador-correo.md`) y, tras confirmar, `envio-simulado.json`.
+
+Un paquete se envía una sola vez: un segundo intento devuelve `ENVIO_DUPLICADO` con el `id_simulacion` anterior. Para reenviar, vuelve a procesar el caso (re-armar el paquete limpia el envío previo). El encabezado del formulario toma la razón social de `data/maestro.json` y muestra la fecha en hora de Bogotá.
 
 ### Variables de entorno
 
 | Variable | Default | Uso |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Requerida para el agente y las evals |
+| `ANTHROPIC_API_KEY` | — | Requerida para el agente y las evals (en `.env` o exportada) |
 | `ANTHROPIC_MODEL` | `claude-sonnet-5-5` | Modelo del agente y del juez |
 | `FECHA_EVALUACION` | hoy (Bogotá) | Fija la fecha de corte para pruebas reproducibles |
 | `PERIXIA_DATA_DIR` / `PERIXIA_OUT_DIR` | `data` / `out` | Rutas de datos y salida |
@@ -71,8 +88,10 @@ Los reportes quedan en `reports/` (JSON con la traza completa + `junit-evals.xml
 ## MCP
 
 ```json
-{ "mcpServers": { "perixia-proveedor": { "command": "npx", "args": ["tsx", "src/mcp-server.ts"], "cwd": "/ruta/al/proyecto" } } }
+{ "mcpServers": { "perixia-proveedor": { "command": "npx", "args": ["tsx", "--env-file-if-exists=.env", "src/mcp-server.ts"], "cwd": "/ruta/al/proyecto" } } }
 ```
+
+Para probarlo desde la terminal: `npm run mcp`.
 
 En modo MCP, el host controla la conversación, así que la regla del "turno inmediatamente anterior" no puede garantizarse en el servidor. Como mitigación, `proveedor_simular_envio` exige el texto literal de la confirmación del usuario y lo valida. Para la garantía completa, usa el orquestador.
 
